@@ -26,7 +26,7 @@ func (info *Info) print() {
 	fmt.Printf("\x1b[34mhealth\t\t%.2f%s (%d/%d mAh)\x1b[0m\n", health_percent*100, "%", info.max_capacity, info.design_capacity)
 	fmt.Printf("\x1b[31mtemp\t\t%.2f °C\x1b[0m\n", info.temperature)
 	fmt.Printf("\x1b[33mcycles\t\t%d\x1b[0m\n", info.cycles)
-	fmt.Printf("\x1b[36mcharge\t\t%.2f%s %s\x1b[0m\n", float32(info.current_capacity)/float32(info.max_capacity)*100, "%", charging_symbol)
+	fmt.Printf("\x1b[36mcharge\t\t%.2f%s (%d/%d mAh) %s\x1b[0m\n", float32(info.current_capacity)/float32(info.max_capacity)*100, "%", info.current_capacity, info.max_capacity, charging_symbol)
 }
 
 func main() {
