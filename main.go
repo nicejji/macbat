@@ -9,28 +9,97 @@ import (
 )
 
 type Info struct {
-	temperature      float32
-	cycles           int
-	design_capacity  int
-	max_capacity     int
-	current_capacity int
-	is_charging      bool
+	Temperature     float32
+	Cycles          int
+	DesignCapacity  int
+	MaxCapacity     int
+	CurrentCapacity int
+	IsCharging      bool
+}
+
+const CSI string = "\x1b["
+const RESET string = CSI + "0m"
+const BOLD string = CSI + "1m"
+const NORMAL string = CSI + "22m"
+const ITALIC string = CSI + "3m"
+const BLUE string = CSI + "34m"
+const RED string = CSI + "31m"
+const YELLOW string = CSI + "33m"
+const CYAN string = CSI + "36m"
+const GRAY string = CSI + "90m"
+
+func formatOpt(name string, value string, desc string, color string) string {
+	return fmt.Sprintf(
+		color+"%s\t%s  %s"+RESET,
+		NORMAL+name,
+		BOLD+value,
+		GRAY+NORMAL+ITALIC+desc,
+	)
 }
 
 func (info *Info) print() {
-	health_percent := float32(info.max_capacity) / float32(info.design_capacity)
+	health_percent :=
+		float32(info.MaxCapacity) / float32(info.DesignCapacity) * 100
+	charge_percent :=
+		float32(info.CurrentCapacity) / float32(info.MaxCapacity) * 100
 	charging_symbol := "⇣"
-	if info.is_charging {
+	if info.IsCharging {
 		charging_symbol = "⇡"
 	}
-	fmt.Printf("\x1b[34mhealth\t\t%.2f%s (%d/%d mAh)\x1b[0m\n", health_percent*100, "%", info.max_capacity, info.design_capacity)
-	fmt.Printf("\x1b[31mtemp\t\t%.2f °C\x1b[0m\n", info.temperature)
-	fmt.Printf("\x1b[33mcycles\t\t%d\x1b[0m\n", info.cycles)
-	fmt.Printf("\x1b[36mcharge\t\t%.2f%s (%d/%d mAh) %s\x1b[0m\n", float32(info.current_capacity)/float32(info.max_capacity)*100, "%", info.current_capacity, info.max_capacity, charging_symbol)
+	fmt.Println(
+		formatOpt(
+			"Raw Health",
+			fmt.Sprintf(
+				"%.2f%% (%d/%d mAh)",
+				health_percent,
+				info.MaxCapacity,
+				info.DesignCapacity,
+			),
+			"Raw battery health",
+			BLUE,
+		),
+	)
+	fmt.Println(
+		formatOpt(
+			"Temperature",
+			fmt.Sprintf("%.2f °C", info.Temperature),
+			"Battery temperature",
+			RED,
+		),
+	)
+	fmt.Println(
+		formatOpt(
+			"Cycles Count",
+			fmt.Sprintf("%d", info.Cycles),
+			"Cycles count",
+			YELLOW,
+		),
+	)
+	fmt.Println(
+		formatOpt(
+			"Charge Info",
+			fmt.Sprintf(
+				"%.2f%% (%d/%d mAh) %s",
+				charge_percent,
+				info.CurrentCapacity,
+				info.MaxCapacity,
+				charging_symbol,
+			),
+			"Charge percent",
+			CYAN,
+		),
+	)
 }
 
 func main() {
-	out, err := exec.Command("ioreg", "-w", "0", "-r", "-c", "AppleSmartBattery").Output()
+	out, err := exec.Command(
+		"ioreg",
+		"-w",
+		"0",
+		"-r",
+		"-c",
+		"AppleSmartBattery",
+	).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,28 +109,20 @@ func main() {
 		parsed := strings.Split(strings.TrimSpace(line), "=")
 		name := strings.Trim(strings.TrimSpace(parsed[0]), "\"")
 		value := strings.TrimSpace(parsed[1])
-		if name == "IsCharging" {
-			info.is_charging = value == "Yes"
-		}
-		if name == "AppleRawMaxCapacity" {
-			max_capacity, _ := strconv.Atoi(value)
-			info.max_capacity = max_capacity
-		}
-		if name == "AppleRawCurrentCapacity" {
-			current_capacity, _ := strconv.Atoi(value)
-			info.current_capacity = current_capacity
-		}
-		if name == "DesignCapacity" {
-			design_capacity, _ := strconv.Atoi(value)
-			info.design_capacity = design_capacity
-		}
-		if name == "CycleCount" {
-			cycles, _ := strconv.Atoi(value)
-			info.cycles = cycles
-		}
-		if name == "Temperature" {
+		switch name {
+		case "IsCharging":
+			info.IsCharging = value == "Yes"
+		case "AppleRawMaxCapacity":
+			info.MaxCapacity, _ = strconv.Atoi(value)
+		case "AppleRawCurrentCapacity":
+			info.CurrentCapacity, _ = strconv.Atoi(value)
+		case "DesignCapacity":
+			info.DesignCapacity, _ = strconv.Atoi(value)
+		case "CycleCount":
+			info.Cycles, _ = strconv.Atoi(value)
+		case "Temperature":
 			temperature, _ := strconv.Atoi(value)
-			info.temperature = float32(temperature) / 100.0
+			info.Temperature = float32(temperature) / 100.0
 		}
 	}
 
