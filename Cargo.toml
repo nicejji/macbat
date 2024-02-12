@@ -2,7 +2,16 @@
 name = "macbat"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Tiny cli utility to get mac's battery info"
+repository = "https://github.com/nicejji/macbat"
+readme = "README.md"
+keywords = ["info", "battery"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+[profile.release]
+strip = true     
