@@ -6,8 +6,8 @@
 
 #### Building
 
-`go build`
+`cargo build`
 
 #### Installation
 
-`go build && go install` inside project folder.
+`cargo install --path .` inside project folder.
