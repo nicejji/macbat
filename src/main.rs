@@ -60,7 +60,7 @@ impl Info {
             format_opt(
                 "Charge info",
                 &format!(
-                    "{:.2} ({}/{} mAh) {}",
+                    "{:.2}% ({}/{} mAh) {}",
                     charge_percent, self.current_capacity, self.max_capacity, charging_symbol
                 ),
                 "Charge percent",
