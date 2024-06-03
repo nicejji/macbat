@@ -20,19 +20,36 @@ struct Info {
     is_charging: bool,
 }
 
+#[derive(PartialEq, Eq)]
+enum PrintStyle {
+    Colorful,
+    Interactive,
+}
+
 impl Info {
-    pub fn print(&self) {
-        let health_percent = self.max_capacity as f64 / self.design_capacity as f64 * 100.0;
-        let charge_percent = self.current_capacity as f64 / self.max_capacity as f64 * 100.0;
-        let charging_symbol = if self.is_charging { '⇡' } else { '⇣' };
+    pub fn print(&self, style: PrintStyle) {
+        let Self {
+            temperature,
+            cycles_count,
+            design_capacity,
+            max_capacity,
+            current_capacity,
+            is_charging,
+        } = &self;
+
+        let health_percent = *max_capacity as f64 / *design_capacity as f64 * 100.0;
+        let charge_percent = *current_capacity as f64 / *max_capacity as f64 * 100.0;
+        let charging_symbol = if *is_charging { '⇡' } else { '⇣' };
+
+        if style == PrintStyle::Interactive {
+            let total_width = 30;
+            return;
+        }
         println!(
             "{}",
             format_opt(
                 "Raw Health",
-                &format!(
-                    "{:.2}% ({}/{} mAh)",
-                    health_percent, self.max_capacity, self.design_capacity
-                ),
+                &format!("{health_percent:.2}% ({max_capacity}/{design_capacity} mAh)",),
                 "Raw battery health",
                 BLUE
             )
@@ -41,7 +58,7 @@ impl Info {
             "{}",
             format_opt(
                 "Temperature",
-                &format!("{:.2} °C", self.temperature),
+                &format!("{temperature:.2} °C"),
                 "Battery temperature",
                 RED
             )
@@ -50,7 +67,7 @@ impl Info {
             "{}",
             format_opt(
                 "Cycles count",
-                &format!("{}", self.cycles_count),
+                &format!("{cycles_count}",),
                 "Cycles count",
                 YELLOW
             )
@@ -60,8 +77,7 @@ impl Info {
             format_opt(
                 "Charge info",
                 &format!(
-                    "{:.2}% ({}/{} mAh) {}",
-                    charge_percent, self.current_capacity, self.max_capacity, charging_symbol
+                    "{charge_percent:.2}% ({current_capacity}/{max_capacity} mAh) {charging_symbol}",
                 ),
                 "Charge percent",
                 CYAN
@@ -71,7 +87,7 @@ impl Info {
 }
 
 fn format_opt(name: &str, value: &str, desc: &str, color: &str) -> String {
-    return format!("{color}{NORMAL}{name}\t{BOLD}{value}  {GRAY}{NORMAL}{ITALIC}{desc}{RESET}");
+    format!("{color}{NORMAL}{name}\t{BOLD}{value}  {GRAY}{NORMAL}{ITALIC}{desc}{RESET}")
 }
 
 fn main() {
@@ -102,5 +118,5 @@ fn main() {
             None => {}
         }
     }
-    info.print();
+    info.print(PrintStyle::Colorful);
 }
